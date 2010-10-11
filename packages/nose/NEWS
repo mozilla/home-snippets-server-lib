@@ -1,0 +1,6 @@
+0.11.3
+------
+
+nose version 0.11.3 fixes a method resolution order bug in 0.11.2 that
+prevented plugin overriding from working correctly with the
+DefaultPluginManager.
