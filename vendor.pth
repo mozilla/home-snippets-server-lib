@@ -4,8 +4,11 @@ packages/distribute
 packages/nose
 packages/pep8
 packages/pyflakes
+packages/python-memcached
 src/check
 src/django-multidb-router
 src/django-nose
 src/nosexcover
 src/schematic
+src/django-smuggler
+src/django-mozilla-product-details
