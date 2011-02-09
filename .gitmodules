@@ -13,3 +13,6 @@
 [submodule "src/schematic"]
 	path = src/schematic
 	url = git://github.com/jbalogh/schematic.git
+[submodule "src/django-smuggler"]
+	path = src/django-smuggler
+	url = git://github.com/semente/django-smuggler.git
