@@ -2,8 +2,6 @@
 Unicode data
 ============
 
-.. versionadded:: 1.0
-
 Django natively supports Unicode data everywhere. Providing your database can
 somehow store the data, you can safely pass around Unicode strings to
 templates, models and the database.
@@ -141,6 +139,8 @@ for converting back and forth between Unicode and bytestrings.
 Normally, you'll only need to use ``smart_unicode()``. Call it as early as
 possible on any input data that might be either Unicode or a bytestring, and
 from then on, you can treat the result as always being Unicode.
+
+.. _uri-and-iri-handling:
 
 URI and IRI handling
 ~~~~~~~~~~~~~~~~~~~~

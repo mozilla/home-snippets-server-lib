@@ -46,6 +46,11 @@ th {
     float: left;
 }
 
+thead th:first-child,
+tfoot td:first-child {
+    border-left: 1px solid #ddd !important;
+}
+
 /* LAYOUT */
 
 #user-tools {
@@ -73,6 +78,19 @@ div.breadcrumbs {
     margin-right: 10px !important;
 }
 
+/* SORTABLE TABLES */
+
+
+table thead th.sorted a {
+    padding-left: 13px;
+    padding-right: 0px;
+}
+
+table thead th.ascending a,
+table thead th.descending a {
+    background-position: left;
+}
+
 /* dashboard styles */
 
 .dashboard .module table td a {
@@ -81,6 +99,10 @@ div.breadcrumbs {
 }
 
 /* changelists styles */
+
+.change-list ul.toplinks li {
+    float: right;
+}
 
 .change-list .filtered {
     background: white url(../img/admin/changelist-bg_rtl.gif) top left repeat-y !important;
@@ -98,7 +120,7 @@ div.breadcrumbs {
     border-right: 1px solid #ddd;
 }
 
-.change-list .filtered table, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
+.change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
     margin-right: 0px !important;
     margin-left: 160px !important;
 }
@@ -117,6 +139,11 @@ div.breadcrumbs {
     margin-left:160px !important;
     border-right: 0 none;
     margin-right:0 !important;
+}
+
+#changelist table tbody td:first-child, #changelist table tbody th:first-child {
+    border-right: 0;
+    border-left: 1px solid #ddd;
 }
 
 /* FORMS */

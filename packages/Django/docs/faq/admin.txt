@@ -8,8 +8,8 @@ The login cookie isn't being set correctly, because the domain of the cookie
 sent out by Django doesn't match the domain in your browser. Try these two
 things:
 
-    * Set the ``SESSION_COOKIE_DOMAIN`` setting in your admin config file
-      to match your domain. For example, if you're going to
+    * Set the :setting:`SESSION_COOKIE_DOMAIN` setting in your admin config
+      file to match your domain. For example, if you're going to
       "http://www.example.com/admin/" in your browser, in
       "myproject.settings" you should set ``SESSION_COOKIE_DOMAIN = 'www.example.com'``.
 
@@ -17,7 +17,7 @@ things:
       don't have dots in them. If you're running the admin site on "localhost"
       or another domain that doesn't have a dot in it, try going to
       "localhost.localdomain" or "127.0.0.1". And set
-      ``SESSION_COOKIE_DOMAIN`` accordingly.
+      :setting:`SESSION_COOKIE_DOMAIN` accordingly.
 
 I can't log in. When I enter a valid username and password, it brings up the login page again, with a "Please enter a correct username and password" error.
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -52,11 +52,11 @@ admin. Using the same trick of extracting the user from the request, the
 :meth:`~django.contrib.admin.ModelAdmin.has_change_permission` can be used to
 control the visibility and editability of objects in the admin.
 
-My admin-site CSS and images showed up fine using the development server, but they're not displaying when using mod_python.
+My admin-site CSS and images showed up fine using the development server, but they're not displaying when using mod_wsgi.
 ---------------------------------------------------------------------------------------------------------------------------
 
-See :ref:`serving the admin files <howto-deployment-modpython-serving-the-admin-files>`
-in the "How to use Django with mod_python" documentation.
+See :ref:`serving the admin files <serving-the-admin-files>`
+in the "How to use Django with mod_wsgi" documentation.
 
 My "list_filter" contains a ManyToManyField, but the filter doesn't display.
 ----------------------------------------------------------------------------

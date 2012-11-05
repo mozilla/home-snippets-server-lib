@@ -25,7 +25,7 @@ class Options(object):
         self.managed = True
         self.proxy = False
 
-class CacheClass(BaseCache):
+class BaseDatabaseCache(BaseCache):
     def __init__(self, table, params):
         BaseCache.__init__(self, params)
         self._table = table
@@ -34,18 +34,10 @@ class CacheClass(BaseCache):
             _meta = Options(table)
         self.cache_model_class = CacheEntry
 
-        max_entries = params.get('max_entries', 300)
-        try:
-            self._max_entries = int(max_entries)
-        except (ValueError, TypeError):
-            self._max_entries = 300
-        cull_frequency = params.get('cull_frequency', 3)
-        try:
-            self._cull_frequency = int(cull_frequency)
-        except (ValueError, TypeError):
-            self._cull_frequency = 3
-
-    def get(self, key, default=None):
+class DatabaseCache(BaseDatabaseCache):
+    def get(self, key, default=None, version=None):
+        key = self.make_key(key, version=version)
+        self.validate_key(key)
         db = router.db_for_read(self.cache_model_class)
         table = connections[db].ops.quote_name(self._table)
         cursor = connections[db].cursor()
@@ -64,10 +56,14 @@ class CacheClass(BaseCache):
         value = connections[db].ops.process_clob(row[1])
         return pickle.loads(base64.decodestring(value))
 
-    def set(self, key, value, timeout=None):
+    def set(self, key, value, timeout=None, version=None):
+        key = self.make_key(key, version=version)
+        self.validate_key(key)
         self._base_set('set', key, value, timeout)
 
-    def add(self, key, value, timeout=None):
+    def add(self, key, value, timeout=None, version=None):
+        key = self.make_key(key, version=version)
+        self.validate_key(key)
         return self._base_set('add', key, value, timeout)
 
     def _base_set(self, mode, key, value, timeout=None):
@@ -102,7 +98,10 @@ class CacheClass(BaseCache):
             transaction.commit_unless_managed(using=db)
             return True
 
-    def delete(self, key):
+    def delete(self, key, version=None):
+        key = self.make_key(key, version=version)
+        self.validate_key(key)
+
         db = router.db_for_write(self.cache_model_class)
         table = connections[db].ops.quote_name(self._table)
         cursor = connections[db].cursor()
@@ -110,7 +109,10 @@ class CacheClass(BaseCache):
         cursor.execute("DELETE FROM %s WHERE cache_key = %%s" % table, [key])
         transaction.commit_unless_managed(using=db)
 
-    def has_key(self, key):
+    def has_key(self, key, version=None):
+        key = self.make_key(key, version=version)
+        self.validate_key(key)
+
         db = router.db_for_read(self.cache_model_class)
         table = connections[db].ops.quote_name(self._table)
         cursor = connections[db].cursor()
@@ -130,7 +132,13 @@ class CacheClass(BaseCache):
             cursor.execute("SELECT COUNT(*) FROM %s" % table)
             num = cursor.fetchone()[0]
             if num > self._max_entries:
-                cursor.execute("SELECT cache_key FROM %s ORDER BY cache_key LIMIT 1 OFFSET %%s" % table, [num / self._cull_frequency])
+                cull_num = num / self._cull_frequency
+                if connections[db].vendor == 'oracle':
+                    # Special case for Oracle because it doesn't support LIMIT + OFFSET
+                    cursor.execute("SELECT cache_key FROM (SELECT ROW_NUMBER() OVER (ORDER BY cache_key) AS counter, cache_key FROM %s) WHERE counter > %%s AND COUNTER <= %%s" % table, [cull_num, cull_num + 1])
+		else:
+                    # This isn't standard SQL, it's likely to break with some non officially supported databases             
+                    cursor.execute("SELECT cache_key FROM %s ORDER BY cache_key LIMIT 1 OFFSET %%s" % table, [cull_num])
                 cursor.execute("DELETE FROM %s WHERE cache_key < %%s" % table, [cursor.fetchone()[0]])
 
     def clear(self):
@@ -138,3 +146,7 @@ class CacheClass(BaseCache):
         table = connections[db].ops.quote_name(self._table)
         cursor = connections[db].cursor()
         cursor.execute('DELETE FROM %s' % table)
+
+# For backwards compatibility
+class CacheClass(DatabaseCache):
+    pass

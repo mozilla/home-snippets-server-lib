@@ -39,7 +39,7 @@ The value of ``DJANGO_SETTINGS_MODULE`` should be in Python path syntax, e.g.
 ``mysite.settings``. Note that the settings module should be on the
 Python `import search path`_.
 
-.. _import search path: http://diveintopython.org/getting_to_know_python/everything_is_an_object.html
+.. _import search path: http://diveintopython.net/getting_to_know_python/everything_is_an_object.html
 
 The django-admin.py utility
 ---------------------------
@@ -64,20 +64,19 @@ Use the ``--settings`` command-line argument to specify the settings manually::
 
 .. _django-admin.py: ../django-admin/
 
-On the server (mod_python)
+On the server (mod_wsgi)
 --------------------------
 
-In your live server environment, you'll need to tell Apache/mod_python which
-settings file to use. Do that with ``SetEnv``::
+In your live server environment, you'll need to tell your WSGI
+application what settings file to use. Do that with ``os.environ``::
 
-    <Location "/mysite/">
-        SetHandler python-program
-        PythonHandler django.core.handlers.modpython
-        SetEnv DJANGO_SETTINGS_MODULE mysite.settings
-    </Location>
+    import os
 
-Read the :doc:`Django mod_python documentation </howto/deployment/modpython>` for
-more information.
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'
+
+Read the :doc:`Django mod_wsgi documentation
+</howto/deployment/modwsgi>` for more information and other common
+elements to a Django WSGI application.
 
 Default settings
 ================
@@ -210,7 +209,7 @@ provides the default settings as the ``default_settings`` argument (or as the
 first positional argument) in the call to ``configure()``.
 
 In this example, default settings are taken from ``myapp_defaults``, and the
-``DEBUG`` setting is set to ``True``, regardless of its value in
+:setting:`DEBUG` setting is set to ``True``, regardless of its value in
 ``myapp_defaults``::
 
     from django.conf import settings

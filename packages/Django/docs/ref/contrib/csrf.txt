@@ -81,6 +81,67 @@ The utility script ``extras/csrf_migration_helper.py`` can help to automate the
 finding of code and templates that may need to be upgraded.  It contains full
 help on how to use it.
 
+.. _csrf-ajax:
+
+AJAX
+----
+
+While the above method can be used for AJAX POST requests, it has some
+inconveniences: you have to remember to pass the CSRF token in as POST data with
+every POST request. For this reason, there is an alternative method: on each
+XMLHttpRequest, set a custom `X-CSRFToken` header to the value of the CSRF
+token. This is often easier, because many javascript frameworks provide hooks
+that allow headers to be set on every request. In jQuery, you can use the
+``ajaxSend`` event as follows:
+
+.. code-block:: javascript
+
+    $(document).ajaxSend(function(event, xhr, settings) {
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        function sameOrigin(url) {
+            // url could be relative or scheme relative or absolute
+            var host = document.location.host; // host + port
+            var protocol = document.location.protocol;
+            var sr_origin = '//' + host;
+            var origin = protocol + sr_origin;
+            // Allow absolute or scheme relative URLs to same origin
+            return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+                (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+                // or any other URL that isn't scheme relative or absolute i.e relative.
+                !(/^(\/\/|http:|https:).*/.test(url));
+        }
+        function safeMethod(method) {
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        if (!safeMethod(settings.type) && sameOrigin(settings.url)) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    });
+
+.. note::
+
+    Due to a bug introduced in jQuery 1.5, the example above will not work
+    correctly on that version. Make sure you are running at least jQuery 1.5.1.
+
+Adding this to a javascript file that is included on your site will ensure that
+AJAX POST requests that are made via jQuery will not be caught by the CSRF
+protection.
+
 The decorator method
 --------------------
 
@@ -241,7 +302,6 @@ it.
 Exceptions
 ----------
 
-.. versionadded:: 1.1
 .. versionchanged:: 1.2
     Import paths for the decorators below were changed.
 
@@ -261,10 +321,6 @@ in the same module.  These disable the view protection mechanism
 (``CsrfViewMiddleware``) and the response post-processing
 (``CsrfResponseMiddleware``) respectively.  They can be used individually if
 required.
-
-You don't have to worry about doing this for most AJAX views. Any request sent
-with "X-Requested-With: XMLHttpRequest" is automatically exempt. (See the `How
-it works`_ section.)
 
 Subdomains
 ----------
@@ -343,24 +399,6 @@ request ought to be harmless.
 response, and only pages that are served as 'text/html' or
 'application/xml+xhtml' are modified.
 
-AJAX
-----
-
-The middleware tries to be smart about requests that come in via AJAX. Most
-modern JavaScript toolkits send an "X-Requested-With: XMLHttpRequest" HTTP
-header; these requests are detected and automatically *not* handled by this
-middleware.  We can do this safely because, in the context of a browser, the
-header can only be added by using ``XMLHttpRequest``, and browsers already
-implement a same-domain policy for ``XMLHttpRequest``.
-
-For the more recent browsers that relax this same-domain policy, custom headers
-like "X-Requested-With" are only allowed after the browser has done a
-'preflight' check to the server to see if the cross-domain request is allowed,
-using a strictly 'opt in' mechanism, so the exception for AJAX is still safe—if
-the developer has specifically opted in to allowing cross-site AJAX POST
-requests on a specific URL, they obviously don't want the middleware to disallow
-exactly that.
-
 .. _9.1.1 Safe Methods, HTTP 1.1, RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
 
 Caching
@@ -375,15 +413,16 @@ middleware if it is used as instructed (``UpdateCacheMiddleware`` goes before
 all other middleware).
 
 However, if you use cache decorators on individual views, the CSRF middleware
-will not yet have been able to set the Vary header.  In this case, on any views
-that will require a CSRF token to be inserted you should use the
-:func:`django.views.decorators.vary.vary_on_cookie` decorator first::
+will not yet have been able to set the Vary header or the CSRF cookie, and the
+response will be cached without either one. In this case, on any views that
+will require a CSRF token to be inserted you should use the
+:func:`django.views.decorators.csrf.csrf_protect` decorator first::
 
   from django.views.decorators.cache import cache_page
-  from django.views.decorators.vary import vary_on_cookie
+  from django.views.decorators.csrf import csrf_protect
 
   @cache_page(60 * 15)
-  @vary_on_cookie
+  @csrf_protect
   def my_view(request):
       # ...
 

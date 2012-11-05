@@ -290,7 +290,7 @@ far. So you also need to remember to allow for the fact that the fields you
 are wanting to validate might not have survived the initial individual field
 checks.
 
-There are two way to report any errors from this step. Probably the most
+There are two ways to report any errors from this step. Probably the most
 common method is to display the error at the top of the form. To create such
 an error, you can raise a ``ValidationError`` from the ``clean()`` method. For
 example::
@@ -361,6 +361,6 @@ considering aren't valid, we must remember to remove them from the
 ``cleaned_data``.
 
 In fact, Django will currently completely wipe out the ``cleaned_data``
-dictionary if there are any errors in the form. However, this behaviour may
+dictionary if there are any errors in the form. However, this behavior may
 change in the future, so it's not a bad idea to clean up after yourself in the
 first place.

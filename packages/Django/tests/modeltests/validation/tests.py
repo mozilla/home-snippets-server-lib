@@ -6,7 +6,8 @@ from modeltests.validation.models import Author, Article, ModelToValidate
 
 # Import other tests for this package.
 from modeltests.validation.validators import TestModelsWithValidators
-from modeltests.validation.test_unique import GetUniqueCheckTests, PerformUniqueChecksTest
+from modeltests.validation.test_unique import (GetUniqueCheckTests,
+    PerformUniqueChecksTest)
 from modeltests.validation.test_custom_messages import CustomMessagesTest
 
 
@@ -33,7 +34,7 @@ class BaseModelValidationTests(ValidationTestCase):
         mtv = ModelToValidate(number=10, name='Some Name', parent_id=parent.pk)
         self.assertEqual(None, mtv.full_clean())
 
-    def test_limitted_FK_raises_error(self):
+    def test_limited_FK_raises_error(self):
         # The limit_choices_to on the parent field says that a parent object's
         # number attribute must be 10, so this should fail validation.
         parent = ModelToValidate.objects.create(number=11, name='Other Name')
@@ -52,15 +53,24 @@ class BaseModelValidationTests(ValidationTestCase):
         mtv = ModelToValidate(number=10, name='Some Name', url='not a url')
         self.assertFieldFailsValidationWithMessage(mtv.full_clean, 'url', [u'Enter a valid value.'])
 
+    #The tests below which use url_verify are deprecated
     def test_correct_url_but_nonexisting_gives_404(self):
-        mtv = ModelToValidate(number=10, name='Some Name', url='http://google.com/we-love-microsoft.html')
-        self.assertFieldFailsValidationWithMessage(mtv.full_clean, 'url', [u'This URL appears to be a broken link.'])
+        mtv = ModelToValidate(number=10, name='Some Name', url_verify='http://qa-dev.w3.org/link-testsuite/http.php?code=404')
+        self.assertFieldFailsValidationWithMessage(mtv.full_clean, 'url_verify', [u'This URL appears to be a broken link.'])
 
     def test_correct_url_value_passes(self):
-        mtv = ModelToValidate(number=10, name='Some Name', url='http://www.djangoproject.com/')
+        mtv = ModelToValidate(number=10, name='Some Name', url_verify='http://www.google.com/')
         self.assertEqual(None, mtv.full_clean()) # This will fail if there's no Internet connection
 
-    def test_text_greater_that_charfields_max_length_eaises_erros(self):
+    def test_correct_url_with_redirect(self):
+        mtv = ModelToValidate(number=10, name='Some Name', url_verify='http://qa-dev.w3.org/link-testsuite/http.php?code=301') #example.com is a redirect to iana.org now
+        self.assertEqual(None, mtv.full_clean()) # This will fail if there's no Internet connection
+
+    def test_correct_https_url_but_nonexisting(self):
+        mtv = ModelToValidate(number=10, name='Some Name', url_verify='https://www.example.com/')
+        self.assertFieldFailsValidationWithMessage(mtv.full_clean, 'url_verify', [u'This URL appears to be a broken link.'])
+
+    def test_text_greater_that_charfields_max_length_raises_erros(self):
         mtv = ModelToValidate(number=10, name='Some Name'*100)
         self.assertFailsValidation(mtv.full_clean, ['name',])
 
@@ -111,4 +121,3 @@ class ModelFormsTests(TestCase):
         article = Article(author_id=self.author.id)
         form = ArticleForm(data, instance=article)
         self.assertEqual(form.errors.keys(), ['pub_date'])
-

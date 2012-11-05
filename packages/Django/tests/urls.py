@@ -1,5 +1,6 @@
 from django.conf.urls.defaults import *
 
+
 urlpatterns = patterns('',
     # test_client modeltest urls
     (r'^test_client/', include('modeltests.test_client.urls')),
@@ -28,8 +29,6 @@ urlpatterns = patterns('',
     # admin widget tests
     (r'widget_admin/', include('regressiontests.admin_widgets.urls')),
 
-    (r'^utils/', include('regressiontests.utils.urls')),
-
     # test urlconf for syndication tests
     (r'^syndication/', include('regressiontests.syndication.urls')),
 
@@ -41,4 +40,7 @@ urlpatterns = patterns('',
 
     # special headers views
     (r'special_headers/', include('regressiontests.special_headers.urls')),
+
+    # test util views
+    (r'test_utils/', include('regressiontests.test_utils.urls')),
 )

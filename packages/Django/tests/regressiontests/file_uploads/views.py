@@ -71,6 +71,7 @@ def file_upload_unicode_name(request):
     # upload directory has been seen to choke on unicode
     # filenames on Windows.)
     obj.delete()
+    os.unlink(full_name)
 
     if response:
         return response
@@ -82,6 +83,13 @@ def file_upload_echo(request):
     Simple view to echo back info about uploaded files for tests.
     """
     r = dict([(k, f.name) for k, f in request.FILES.items()])
+    return HttpResponse(simplejson.dumps(r))
+
+def file_upload_echo_content(request):
+    """
+    Simple view to echo back the content of uploaded files for tests.
+    """
+    r = dict([(k, f.read()) for k, f in request.FILES.items()])
     return HttpResponse(simplejson.dumps(r))
 
 def file_upload_quota(request):
